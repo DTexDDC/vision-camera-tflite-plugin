@@ -1,0 +1,61 @@
+{
+  "name": "vision-camera-tflite-plugin",
+  "version": "0.1.0",
+  "description": "test",
+  "main": "src/index",
+  "files": [
+    "src",
+    "lib",
+    "android",
+    "ios",
+    "cpp",
+    "vision-camera-tflite-plugin.podspec",
+    "!lib/typescript/example",
+    "!android/build",
+    "!ios/build",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__"
+  ],
+  "keywords": [
+    "react-native",
+    "ios",
+    "android"
+  ],
+  "repository": "https://github.com",
+  "author": "Thomas Coldwell <31568400+thomas-coldwell@users.noreply.github.com> (https://github.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/issues"
+  },
+  "homepage": "https://github.com#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "react-native-builder-bob": "^0.18.3"
+  },
+  "resolutions": {
+    "@types/react": "17.0.21"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-reanimated": ">= 2.2.0",
+    "react-native-vision-camera": ">= 2"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
+  }
+}
