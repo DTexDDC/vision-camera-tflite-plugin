@@ -15,7 +15,9 @@ import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
+import com.mrousavy.camera.frameprocessor.Frame
 import com.mrousavy.camera.frameprocessor.FrameProcessorPlugin
+import com.mrousavy.camera.parsers.Orientation
 import com.visioncameratfliteplugin.utils.YuvToRgbConverter
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.image.ImageProcessor
@@ -28,7 +30,7 @@ import java.lang.Float
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
-class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameProcessorPlugin("detectLabel") {
+class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameProcessorPlugin() {
 
     private var isConfiguringModel = false
     private lateinit var interpreter: Interpreter
@@ -80,9 +82,9 @@ class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameP
     }
 
     @SuppressLint("UnsafeOptInUsageError")
-    override fun callback(image: ImageProxy, params: Array<Any>): Any? {
+    override fun callback(frame: Frame, params: MutableMap<String, Any>?): Any? {
         if (!::interpreter.isInitialized && !isConfiguringModel) {
-            val modelPath = params[0] as? String ?: return null
+            val modelPath = params?.get("modelPath") as? String ?: return null
             configureModel(modelPath)
             return null
         }
@@ -90,13 +92,13 @@ class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameP
             val result = WritableNativeMap()
             // Only init the bitmap once so we don't re-allocate on each frame
             if (!::bitmap.isInitialized) {
-                bitmap = Bitmap.createBitmap(image.width, image.height, Bitmap.Config.ARGB_8888)
+                bitmap = Bitmap.createBitmap(frame.image.width, frame.image.height, Bitmap.Config.ARGB_8888)
                 return null
             }
             // TFLite only takes RGB and CameraX uses YUV so convert
-            yuvToRgbConverter.yuvToRgb(image.image!!, bitmap)
+            yuvToRgbConverter.yuvToRgb(frame.image, bitmap)
             // Preprocess image to input tensor size
-            val imageRotation = image.imageInfo.rotationDegrees
+            val imageRotation = Orientation.fromUnionValue(frame.orientation)?.toDegrees() ?: 0
             val imageProcessor = ImageProcessor.Builder()
                     .add(Rot90Op(-imageRotation / 90))
                     .add(ResizeOp(inputSize, inputSize, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
