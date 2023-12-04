@@ -52,10 +52,14 @@ class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameP
         val out = Arguments.createArray()
         for (bb in input) {
             val map = Arguments.createMap()
-            map.putDouble("x", bb[1].toDouble())
-            map.putDouble("y", bb[0].toDouble())
-            map.putDouble("width", bb[3].toDouble() - bb[1].toDouble())
-            map.putDouble("height", bb[2].toDouble() - bb[0].toDouble())
+            // map.putDouble("x", bb[1].toDouble())
+            // map.putDouble("y", bb[0].toDouble())
+            // map.putDouble("width", bb[3].toDouble() - bb[1].toDouble())
+            // map.putDouble("height", bb[2].toDouble() - bb[0].toDouble())
+            map.putDouble("ymin", bb[0].toDouble())
+            map.putDouble("xmin", bb[1].toDouble())
+            map.putDouble("ymax", bb[2].toDouble())
+            map.putDouble("xmax", bb[3].toDouble())
             out.pushMap(map)
         }
         return out

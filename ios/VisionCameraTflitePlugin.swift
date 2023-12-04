@@ -37,11 +37,17 @@ public class TFLiteFrameProcessorPlugin: NSObject, FrameProcessorPluginBase {
       let flatBBs = input.chunked(by: 4)
       var out: [Dictionary<String, Float32>] = []
       for flatBB in flatBBs {
+        // out.append([
+        //   "x": flatBB[1],
+        //   "y": flatBB[0],
+        //   "width": flatBB[3] - flatBB[1],
+        //   "height": flatBB[2] - flatBB[0]
+        // ])
         out.append([
-          "x": flatBB[1],
-          "y": flatBB[0],
-          "width": flatBB[3] - flatBB[1],
-          "height": flatBB[2] - flatBB[0]
+          "ymin": flatBB[0],
+          "xmin": flatBB[1],
+          "ymax": flatBB[2],
+          "xmax": flatBB[3]
         ])
       }
       return out
