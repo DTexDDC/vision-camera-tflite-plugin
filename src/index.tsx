@@ -1,6 +1,4 @@
-import type { VisionCameraProxy, Frame } from "react-native-vision-camera";
-
-const plugin = VisionCameraProxy.getFrameProcessorPlugin('detectLabel')
+import type { Frame } from "react-native-vision-camera";
 
 export interface BoundingBox {
   x: number;
@@ -23,8 +21,7 @@ export interface DetectedLabels {
  */
 export function detectLabel(frame: Frame, modelPath: string): DetectedLabels | undefined {
   "worklet";
-  if (plugin == null) throw new Error('Failed to load Frame Processor Plugin "detectLabel"!')
   // @ts-ignore
   // eslint-disable-next-line no-undef
-  return plugin.call(frame, {modelPath});
+  return __detectLabel(frame, modelPath);
 }

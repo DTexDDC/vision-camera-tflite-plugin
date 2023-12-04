@@ -15,9 +15,7 @@ import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
-import com.mrousavy.camera.frameprocessor.Frame
 import com.mrousavy.camera.frameprocessor.FrameProcessorPlugin
-import com.mrousavy.camera.parsers.Orientation
 import com.visioncameratfliteplugin.utils.YuvToRgbConverter
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.image.ImageProcessor
@@ -30,7 +28,7 @@ import java.lang.Float
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
-class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameProcessorPlugin() {
+class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameProcessorPlugin("detectLabel") {
 
     private var isConfiguringModel = false
     private lateinit var interpreter: Interpreter
@@ -54,15 +52,10 @@ class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameP
         val out = Arguments.createArray()
         for (bb in input) {
             val map = Arguments.createMap()
-            // map.putDouble("x", bb[1].toDouble())
-            // map.putDouble("y", bb[0].toDouble())
-            // map.putDouble("width", bb[3].toDouble() - bb[1].toDouble())
-            // map.putDouble("height", bb[2].toDouble() - bb[0].toDouble())
-            map.putDouble("ymin", bb[0].toDouble())
-            map.putDouble("xmin", bb[1].toDouble())
-            map.putDouble("ymax", bb[2].toDouble())
-            map.putDouble("xmax", bb[3].toDouble())
-            
+            map.putDouble("x", bb[1].toDouble())
+            map.putDouble("y", bb[0].toDouble())
+            map.putDouble("width", bb[3].toDouble() - bb[1].toDouble())
+            map.putDouble("height", bb[2].toDouble() - bb[0].toDouble())
             out.pushMap(map)
         }
         return out
@@ -82,9 +75,9 @@ class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameP
     }
 
     @SuppressLint("UnsafeOptInUsageError")
-    override fun callback(frame: Frame, params: MutableMap<String, Any>?): Any? {
+    override fun callback(image: ImageProxy, params: Array<Any>): Any? {
         if (!::interpreter.isInitialized && !isConfiguringModel) {
-            val modelPath = params?.get("modelPath") as? String ?: return null
+            val modelPath = params[0] as? String ?: return null
             configureModel(modelPath)
             return null
         }
@@ -92,13 +85,13 @@ class TFLiteFrameProcessorPlugin(reactContext: ReactApplicationContext) : FrameP
             val result = WritableNativeMap()
             // Only init the bitmap once so we don't re-allocate on each frame
             if (!::bitmap.isInitialized) {
-                bitmap = Bitmap.createBitmap(frame.image.width, frame.image.height, Bitmap.Config.ARGB_8888)
+                bitmap = Bitmap.createBitmap(image.width, image.height, Bitmap.Config.ARGB_8888)
                 return null
             }
             // TFLite only takes RGB and CameraX uses YUV so convert
-            yuvToRgbConverter.yuvToRgb(frame.image, bitmap)
+            yuvToRgbConverter.yuvToRgb(image.image!!, bitmap)
             // Preprocess image to input tensor size
-            val imageRotation = Orientation.fromUnionValue(frame.orientation)?.toDegrees() ?: 0
+            val imageRotation = image.imageInfo.rotationDegrees
             val imageProcessor = ImageProcessor.Builder()
                     .add(Rot90Op(-imageRotation / 90))
                     .add(ResizeOp(inputSize, inputSize, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
